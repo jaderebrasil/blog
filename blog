@@ -50,15 +50,28 @@ main() {
 	render_index
 	$enable_rss && render_rss
 
-	test -z "${!extra_pages[@]}" ||
-		for page in "${!extra_pages[@]}"; do
-			render_html "${extra_pages[$page]}" "$page.md" > "$blogdir/$public/$page.html";
-		done
+	render_extra_pages
 
 	echo "✅ Done."
 }
 
 ################ Utils ###################
+render_extra_pages() {
+	[[ -z "${extra_pages[@]}" ]] && return
+	for category in "${!extra_pages[@]}"; do
+		[[ -d "$blogdir/$public/${category#'/'}" ]] || mkdir -p "$blogdir/$public/${category#'/'}"
+		for page in $category${extra_pages[$category]}.md; do
+			file=${page#'/'}
+			[[ -f $blogdir/$file ]] || continue
+			fbase=$(basename $file)
+			[[ "$category" = "/" ]] &&
+				template="${fbase%.md}_template" ||
+				template="$(basename $category)_template"
+			render_html "$template" "$blogdir/$file" > "$blogdir/$public/${file%.md}.html";
+		done
+	done
+}
+
 # load_metadata <file.md>
 load_metadata() {
 	local file=$1\

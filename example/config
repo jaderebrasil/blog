@@ -11,7 +11,9 @@ public="../docs"
 export github="https://github.com/jaderebrasil/blog"
 
 # adding an extra html page to parse!
-declare -A extra_pages=( ["archive"]="archive_template" )
+declare -A extra_pages=( \
+	["/"]="archive" \
+	["category/"]="*")
 
 # rewrite cleanf function of blog for a particular case
 cleanf() {
