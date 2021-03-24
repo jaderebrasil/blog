@@ -2,11 +2,13 @@
 blogdir=$(pwd)
 
 main() {
-	[[ -f "$blogdir/config" ]] && source "$blogdir/config"
+	[[ -f "$blogdir/config" ]] &&
+		{ source "$blogdir/config" ||
+			{ echo -e "\n\n❗Your config file is broken ❗\n\n"; exit 1 ;};}
 
 	# public variables
-	export blog_title=${blog_title:-"Blog's Name"}
-	export blog_desc=${blog_desc:-"Blog's description"}
+	export blog_title=${blog_title:-"Blog Name"}
+	export blog_desc=${blog_desc:-"Blog description"}
 	export blog_url=${blog_url:-"https://localhost/blog"}
 	export blog_author=${blog_author:-"Default Author"}
 	export postlist_fmt=${postlist_fmt:-'<a href="posts/$fname">$title</a> by $author on $date'}
@@ -42,8 +44,8 @@ main() {
 
 	[[ "$max_postlist" != "unlimited" ]] &&
 		export postlist='<ul class="postlist">'"$(head -n $max_postlist $temp/postlist)"'</ul>' &&
-		export archivelist='<ul class="postlist">'"$(cat $temp/postlist)"'</ul>' ||
-		export postlist='<ul class="postlist">'"$(cat $temp/postlist)"'</ul>'
+		export archivelist='<ul class="postlist">'"$(cat $temp/postlist 2>/dev/null)"'</ul>' ||
+		export postlist='<ul class="postlist">'"$(cat $temp/postlist 2>/dev/null)"'</ul>'
 
 	render_index
 	$enable_rss && render_rss
@@ -53,7 +55,7 @@ main() {
 			render_html "${extra_pages[$page]}" "$page.md" > "$blogdir/$public/$page.html";
 		done
 
-	echo "Done."
+	echo "✅ Done."
 }
 
 ################ Utils ###################
@@ -106,6 +108,7 @@ metadate_check() {
 
 render_rss() {
 	local rss_templ="$blogdir/$templ/rss_template.xml"
+	[[ -f "$temp/rss" ]] || return
 	export blog_rss=$(envsubst < $temp/rss)
 	[[ -f "$rss_templ" ]] &&
 		echo -e '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0">\n<channel>\n<title>$blog_title</title>\n<link>$blog_url</link>\n<description>$blog_desc</description>\n$blog_rss\n</channel>\n</rss>' > $rss_templ
@@ -124,7 +127,9 @@ render_html() {
 		  isapost=${3:-false}
 
 	[[ -f $file ]] || return
-	[[ -f "$template" ]] || { echo '$post' > $template; }
+	[[ -f "$template" ]] ||
+		echo -e '<!DOCTYPE html>\n<html>\n<head>\n\t<meta charset="utf-8">\n\t<title>$blog_title</title>\n\t<meta name="description" content="$blog_desc">\n\t<link rel="alternate" type="application/rss+xml" title="RSS Feed for $blog_title" href="rss.xml"/>\n\t<link rel="stylesheet" href="style.css">\n</head>\n<body>\n<header>\n\t<h1><a href="./index.html"/>$blog_title</a></h1>\n</header>\n<article>$post</article>\n<footer>\n\t<small>Powered by <a href="https://github.com/jaderebrasil/blog">blog</a></small>\n</footer>\n</body>\n</html>' > $template;
+
 
 	load_metadata $file $isapost
 
@@ -140,8 +145,8 @@ render_html() {
 
 render_posts() {
 	local pdir="$blogdir/$public/$posts"
-	mkdir -p "$pdir"
-	for p in $(ls -t1 "$blogdir/$posts/"*.md); do
+
+	for p in $(ls -t1 "$blogdir/$posts/"*.md 2>/dev/null); do
 		fbase=$(basename "$p" | sed -e 's/\s/-/g' -e 's/"//g' | awk '{print tolower($0)}')
 		render_html "post_template" "$p" true > $pdir/${fbase%.md}.html
 	done
