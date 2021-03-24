@@ -1,0 +1,24 @@
+#!/bin/bash
+blog_title="Blog of Blog"
+blog_desc="Description blog to proof the power of blog."
+blog_author="Jader Brasil"
+blog_url="https://jaderebrasil.github.io/blog/"
+
+max_postlist=4
+
+public="../docs"
+
+export github="https://github.com/jaderebrasil/blog"
+
+# adding an extra html page to parse!
+declare -A extra_pages=( ["archive"]="archive_template" )
+
+# rewrite cleanf function of blog for a particular case
+cleanf() {
+	echo "Don't clean anything! except... posts, rss, index and archive"
+	find "$blogdir/$public/$posts" -name "*.html" -type f -exec rm -f {} +
+	rm -f $blogdir/$public/rss.xml
+	rm -f $blogdir/$public/index.html
+	rm -f $blogdir/$public/archive.html
+	echo "All clean."
+}

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>Blog of Blog</title>
+<link>https://jaderebrasil.github.io/blog/</link>
+<description>Description blog to proof the power of blog.</description>
+<item>
+<title>Teste with Image</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_image.html</guid>
+<pubDate>ter, 23 mar 2021 17:21:36 -0300</pubDate><description><![CDATA[<h1>Here is an image</h1><p><img src="../pics/pexels.webp" alt="Image!" /></p>]]></description>
+</item>
+
+<item>
+<title>Test 10</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_10.html</guid>
+<pubDate>ter, 23 mar 2021 17:18:47 -0300</pubDate><description><![CDATA[<h1>Post 10</h1>]]></description>
+</item>
+
+<item>
+<title>Test 9</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_9.html</guid>
+<pubDate>seg, 22 mar 2021 00:00:00 -0300</pubDate><description><![CDATA[<h1>Post 9</h1>]]></description>
+</item>
+
+<item>
+<title>Test 8</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_8.html</guid>
+<pubDate>dom, 21 mar 2021 00:00:00 -0300</pubDate><description><![CDATA[<h1>Post 8</h1>]]></description>
+</item>
+
+<item>
+<title>Test 7</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_7.html</guid>
+<pubDate>sáb, 20 mar 2021 00:00:00 -0300</pubDate><description><![CDATA[<h1>Post 7</h1>]]></description>
+</item>
+
+<item>
+<title>Test 6</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_6.html</guid>
+<pubDate>sex, 19 mar 2021 00:00:00 -0300</pubDate><description><![CDATA[<h1>Post 6</h1>]]></description>
+</item>
+
+<item>
+<title>Test 5</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_5.html</guid>
+<pubDate>qui, 18 mar 2021 00:00:00 -0300</pubDate><description><![CDATA[<h1>Post 5</h1>]]></description>
+</item>
+
+<item>
+<title>Test 4</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_4.html</guid>
+<pubDate>qua, 17 mar 2021 00:00:00 -0300</pubDate><description><![CDATA[<h1>Post 4</h1>]]></description>
+</item>
+
+<item>
+<title>Test 3</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_3.html</guid>
+<pubDate>ter, 16 mar 2021 00:00:00 -0300</pubDate><description><![CDATA[<h1>Post 3</h1>]]></description>
+</item>
+
+<item>
+<title>Test 2</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_2.html</guid>
+<pubDate>seg, 15 mar 2021 00:00:00 -0300</pubDate><description><![CDATA[<h1>Post 2</h1>]]></description>
+</item>
+
+<item>
+<title>Test 1</title>
+<author>Jader Brasil</author>
+<guid>https://jaderebrasil.github.io/blog//posts/test_1.html</guid>
+<pubDate>dom, 14 mar 2021 00:00:00 -0300</pubDate><description><![CDATA[<h1>Post 1</h1>]]></description>
+</item>
+</channel>
+</rss>

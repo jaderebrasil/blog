@@ -1,0 +1,154 @@
+#!/bin/bash
+blogdir=$(pwd)
+
+main() {
+	[[ -f "$blogdir/config" ]] && source "$blogdir/config"
+
+	# public variables
+	export blog_title=${blog_title:-"Blog's Name"}
+	export blog_desc=${blog_desc:-"Blog's description"}
+	export blog_url=${blog_url:-"https://localhost/blog"}
+	export blog_author=${blog_author:-"Default Author"}
+	export postlist_fmt=${postlist_fmt:-'<a href="posts/$fname">$title</a> by $author on $date'}
+	export date_fmt=${date_fmt:-"%B %-d, %Y"}
+	export enable_rss=${enable_rss:-true}
+	export max_postlist=${max_postlist:-unlimited}
+
+	templ=${templ:-templ}
+	posts=${posts:-posts}
+	public=${public:-public}
+
+	# dependencies
+	markup=${markup:-smu}
+	markup_link=${markup_link:-https://github.com/Gottox/smu}
+	hash "$markup" 2> /dev/null ||
+		{ echo "📦 $markup must be installed, check $markup_link." && exit 1; }
+
+	# create directories
+	mkdir -p $blogdir/$templ
+	mkdir -p $blogdir/$posts
+	mkdir -p $blogdir/$public
+	mkdir -p $blogdir/$public/$posts
+
+	# temp dir
+	temp=$(mktemp -d)
+	trap 'rm -rf "$temp"' EXIT
+
+	# clean files
+	cleanf
+
+	# do the thing
+	render_posts
+
+	[[ "$max_postlist" != "unlimited" ]] &&
+		export postlist='<ul class="postlist">'"$(head -n $max_postlist $temp/postlist)"'</ul>' &&
+		export archivelist='<ul class="postlist">'"$(cat $temp/postlist)"'</ul>' ||
+		export postlist='<ul class="postlist">'"$(cat $temp/postlist)"'</ul>'
+
+	render_index
+	$enable_rss && render_rss
+
+	test -z "${!extra_pages[@]}" ||
+		for page in "${!extra_pages[@]}"; do
+			render_html "${extra_pages[$page]}" "$page.md" > "$blogdir/$public/$page.html";
+		done
+
+	echo "Done."
+}
+
+################ Utils ###################
+# load_metadata <file.md>
+load_metadata() {
+	local file=$1\
+		  isapost=${2:-false}\
+	      meta=$(sed -ne '/^---$/,/^---$/ { /---/!p }' $file)\
+	      fbase=$(basename "$file" | sed -e 's/\s/-/g' -e 's/"//g' | awk '{print tolower($0)}')\
+		  aux
+
+	aux=$(sed -n 's/^title:\s\?\(.*\)$/\1/p' <<< $meta)
+	[ -z "$aux" ] && aux=$(basename $file | sed -e 's/\.md$//' -e 's/[-_]/ /g')
+	export title=$aux
+
+	aux=$(sed -n 's/^author:\s\?\(.*\)$/\1/p' <<< $meta)
+	[ -z "$aux" ] && aux=$blog_author
+	export author="$aux"
+
+	export summary=$(echo "$meta" | sed -n 's/^summary:\s\?\(.*\)$/\1/p')
+
+	metadate_check $(sed -n 's/^date:\s\?\(.*\)$/\1/p' <<< $meta) $file
+
+	local udate=$(date -d "`stat -c %y "$file"`" +"%s")
+	export date=$(date -d "@$udate" +"$date_fmt")
+
+	$enable_rss && $isapost &&
+		echo -e "<item>\n<title>$title</title>\n<author>$author</author>\n<guid>$blog_url/posts/${fbase%.md}.html</guid>\n<pubDate>$(date -d "@$udate" +"%a, %d %b %Y %H:%M:%S %z")</pubDate><description><![CDATA[\c" >> $temp/rss
+
+	$isapost && postlist_add "${fbase%.md}" "$title" "$author" "$date"
+}
+
+postlist_add() {
+	export fname=$1.html\
+		   title=$2\
+		   author=$3\
+		   date=$4
+	echo "<li>$(envsubst <<< $postlist_fmt)</li>" >> $temp/postlist
+}
+
+metadate_check() {
+	local file=$2;
+	if [[ ! -z "$1" ]] && date -d "$1" > /dev/null 2>&1; then
+		local mdate=$(date -d "$1" +"%F")
+		local fdate=$(date -d "`stat -c %y "$file"`" +"%F")
+		[[ "$mdate" != "$fdate" ]] &&
+			touch -d "$mdate" "$file"
+	fi
+}
+
+render_rss() {
+	local rss_templ="$blogdir/$templ/rss_template.xml"
+	export blog_rss=$(envsubst < $temp/rss)
+	[[ -f "$rss_templ" ]] &&
+		echo -e '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0">\n<channel>\n<title>$blog_title</title>\n<link>$blog_url</link>\n<description>$blog_desc</description>\n$blog_rss\n</channel>\n</rss>' > $rss_templ
+
+	envsubst < $rss_templ > $blogdir/$public/rss.xml
+}
+
+cleanf() {
+	find "$blogdir/$public/" -name "*.html" -type f -exec rm -f {} +
+	rm -f $blogdir/$public/rss.xml
+}
+
+render_html() {
+	local template="$blogdir/$templ/$1.html"\
+		  file=$2\
+		  isapost=${3:-false}
+
+	[[ -f $file ]] || return
+	[[ -f "$template" ]] || { echo '$post' > $template; }
+
+	load_metadata $file $isapost
+
+	local src=$(sed -e '/^---$/,/^---$/ { d }' $file)
+	local html=$($markup <<< $src)
+	export post=$(envsubst <<< $html)
+
+	$enable_rss && $isapost &&
+		echo -e "${post//$'\n'/}]]></description>\n</item>\n" >> $temp/rss
+
+	envsubst < "$template"
+}
+
+render_posts() {
+	local pdir="$blogdir/$public/$posts"
+	mkdir -p "$pdir"
+	for p in $(ls -t1 "$blogdir/$posts/"*.md); do
+		fbase=$(basename "$p" | sed -e 's/\s/-/g' -e 's/"//g' | awk '{print tolower($0)}')
+		render_html "post_template" "$p" true > $pdir/${fbase%.md}.html
+	done
+}
+
+render_index() {
+	render_html "index_template" "$blogdir/index.md" > $blogdir/$public/index.html
+}
+##########################################
+main
