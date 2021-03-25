@@ -1,0 +1,12 @@
+#!/bin/bash
+verbose=true
+blog_title="Bl-ORG-mode"
+blog_desc="Description blog to proof the power of blog."
+blog_author="Jader Brasil"
+blog_url="https://jaderebrasil.github.io/blog/"
+max_postlist=4
+ex="org"
+markup="./org"
+
+
+export github="https://github.com/jaderebrasil/blog"

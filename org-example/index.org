@@ -1,0 +1,11 @@
+---
+title: Org Example
+---
+#+OPTIONS: toc:nil
+
+* $title
+** $date
+Heyyy
+- This
+- is
+- fun!

@@ -12,6 +12,7 @@ main() {
 	export blog_author=${blog_author:-"Default Author"}
 	export date_fmt=${date_fmt:-"%B %-d, %Y"}
 	export enable_rss=${enable_rss:-true}
+	export ex=${ex:-md}
 
 	export postlist_fmt=${postlist_fmt:-'<a href="$category/$fname">$title</a> by $author on $date'}
 	export max_postlist=${max_postlist:-unlimited}
@@ -57,11 +58,11 @@ render_pages() {
 		[[ -d "$post_dir" ]] || continue
 		post_file=$(awk '{print $2}' <<< "$line")
 
-		for p in $(ls -t1 $post_dir/$post_file.md 2>/dev/null); do
+		for p in $(ls -t1 $post_dir/$post_file.$ex 2>/dev/null); do
 			post_list=$(awk '{print $3}' <<< "$line")
 			[[ "$post_list" = "1" ]] && post_list=true || post_list=false
 			fbase=$(basename "$p" | sed -e 's/\s/-/g' -e 's/"//g' | awk '{print tolower($0)}')
-			fbase=${fbase%.md}
+			fbase=${fbase%.$ex}
 			if [[ "$blogdir" = "$post_dir" ]]; then
 				category=""
 				template="$fbase"_template
@@ -82,7 +83,7 @@ render_pages() {
 			export list_$category='<ul class="postlist">'"$(head -n $max_postlist $temp/postlist)"'</ul>' &&
 			export archive_$category='<ul class="postlist">'"$(cat $temp/postlist 2>/dev/null)"'</ul>' ||
 			export list_$category='<ul class="postlist">'"$(cat $temp/postlist 2>/dev/null)"'</ul>'
-		rm "$temp/postlist"
+		rm -f "$temp/postlist"
 
 	done < "$blogdir/_site"
 }
@@ -96,7 +97,7 @@ load_metadata() {
 		  aux
 
 	aux=$(sed -n 's/^title:\s\?\(.*\)$/\1/p' <<< $meta)
-	[ -z "$aux" ] && aux=$(basename $file | sed -e 's/\.md$//' -e 's/[-_]/ /g')
+	[ -z "$aux" ] && aux=$(basename $file | sed -e 's/\.'$ex'$//' -e 's/[-_]/ /g')
 	export title=$aux
 
 	aux=$(sed -n 's/^author:\s\?\(.*\)$/\1/p' <<< $meta)
@@ -111,9 +112,9 @@ load_metadata() {
 	export date=$(date -d "@$udate" +"$date_fmt")
 
 	$enable_rss && $isapost && [[ ! -z "$category" ]] &&
-		echo -e "<item>\n<category>$category</category><title>$title</title>\n<author>$author</author>\n<guid>$blog_url/posts/${fbase%.md}.html</guid>\n<pubDate>$(date -d "@$udate" +"%a, %d %b %Y %H:%M:%S %z")</pubDate><description><![CDATA[\c" >> $temp/rss
+		echo -e "<item>\n<category>$category</category><title>$title</title>\n<author>$author</author>\n<guid>${blog_url%'/'}/$category/${fbase%.$ex}.html</guid>\n<pubDate>$(date -d "@$udate" +"%a, %d %b %Y %H:%M:%S %z")</pubDate><description><![CDATA[\c" >> $temp/rss
 
-	$isapost && postlist_add "${fbase%.md}" "$title" "$author" "$date" "$category"
+	$isapost && postlist_add "${fbase%.$ex}" "$title" "$author" "$date" "$category"
 }
 
 postlist_add() {
@@ -139,7 +140,7 @@ render_rss() {
 	local rss_templ="$blogdir/$templ/rss_template.xml"
 	[[ -f "$temp/rss" ]] || return
 	export blog_rss=$(envsubst < $temp/rss)
-	[[ -f "$rss_templ" ]] &&
+	[[ -f "$rss_templ" ]] ||
 		echo -e '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0">\n<channel>\n<title>$blog_title</title>\n<link>$blog_url</link>\n<description>$blog_desc</description>\n$blog_rss\n</channel>\n</rss>' > $rss_templ
 
 	envsubst < $rss_templ > $blogdir/$public/rss.xml
