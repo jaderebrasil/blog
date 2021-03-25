@@ -2,5 +2,8 @@
 title: Museum
 ---
 
-# Old stuff
-$archivelist
+# All posts
+$archive_posts
+
+# All category examples
+$archive_category

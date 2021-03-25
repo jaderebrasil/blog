@@ -5,19 +5,18 @@ main() {
 	[[ -f "$blogdir/config" ]] &&
 		{ source "$blogdir/config" ||
 			{ echo -e "\n\n❗Your config file is broken ❗\n\n"; exit 1 ;};}
-
 	# public variables
 	export blog_title=${blog_title:-"Blog Name"}
 	export blog_desc=${blog_desc:-"Blog description"}
 	export blog_url=${blog_url:-"https://localhost/blog"}
 	export blog_author=${blog_author:-"Default Author"}
-	export postlist_fmt=${postlist_fmt:-'<a href="posts/$fname">$title</a> by $author on $date'}
 	export date_fmt=${date_fmt:-"%B %-d, %Y"}
 	export enable_rss=${enable_rss:-true}
+
+	export postlist_fmt=${postlist_fmt:-'<a href="$category/$fname">$title</a> by $author on $date'}
 	export max_postlist=${max_postlist:-unlimited}
 
 	templ=${templ:-templ}
-	posts=${posts:-posts}
 	public=${public:-public}
 
 	# dependencies
@@ -28,54 +27,70 @@ main() {
 
 	# create directories
 	mkdir -p $blogdir/$templ
-	mkdir -p $blogdir/$posts
 	mkdir -p $blogdir/$public
-	mkdir -p $blogdir/$public/$posts
 
 	# temp dir
 	temp=$(mktemp -d)
 	trap 'rm -rf "$temp"' EXIT
 
 	# clean files
-	cleanf
+	cleanf && _verbose "🧹 clean old files."
 
 	# do the thing
-	render_posts
+	render_pages
+	$enable_rss && render_rss && _verbose -e "\n🚩 rss"
 
-	[[ "$max_postlist" != "unlimited" ]] &&
-		export postlist='<ul class="postlist">'"$(head -n $max_postlist $temp/postlist)"'</ul>' &&
-		export archivelist='<ul class="postlist">'"$(cat $temp/postlist 2>/dev/null)"'</ul>' ||
-		export postlist='<ul class="postlist">'"$(cat $temp/postlist 2>/dev/null)"'</ul>'
-
-	render_index
-	$enable_rss && render_rss
-
-	render_extra_pages
-
-	echo "✅ Done."
+	_verbose -e "\n✅ Done."
 }
 
 ################ Utils ###################
-render_extra_pages() {
-	[[ -z "${extra_pages[@]}" ]] && return
-	for category in "${!extra_pages[@]}"; do
-		[[ -d "$blogdir/$public/${category#'/'}" ]] || mkdir -p "$blogdir/$public/${category#'/'}"
-		for page in $category${extra_pages[$category]}.md; do
-			file=${page#'/'}
-			[[ -f $blogdir/$file ]] || continue
-			fbase=$(basename $file)
-			[[ "$category" = "/" ]] &&
-				template="${fbase%.md}_template" ||
-				template="$(basename $category)_template"
-			render_html "$template" "$blogdir/$file" > "$blogdir/$public/${file%.md}.html";
-		done
-	done
+_verbose() {
+	[[ "$verbose" = "true" ]] && echo $@
 }
 
-# load_metadata <file.md>
+render_pages() {
+	local fbase post_dir post_file post_list category template; _verbose -e "rendering pages..."
+	[[ -f "$blogdir/_site" ]] || echo -e "/posts\t*\t1\n/\tindex" >> "$blogdir/_site"
+	while read line; do
+		post_dir="$(awk '{print $1}' <<< "$line")" && _verbose "🧩 $post_dir"
+		post_dir=$blogdir${post_dir%'/'}
+		[[ -d "$post_dir" ]] || continue
+		post_file=$(awk '{print $2}' <<< "$line")
+
+		for p in $(ls -t1 $post_dir/$post_file.md 2>/dev/null); do
+			post_list=$(awk '{print $3}' <<< "$line")
+			[[ "$post_list" = "1" ]] && post_list=true || post_list=false
+			fbase=$(basename "$p" | sed -e 's/\s/-/g' -e 's/"//g' | awk '{print tolower($0)}')
+			fbase=${fbase%.md}
+			if [[ "$blogdir" = "$post_dir" ]]; then
+				category=""
+				template="$fbase"_template
+				output="$blogdir/$public/$fbase.html"
+			else
+				category=$(basename $post_dir)
+				template="$category"_template
+				output="$blogdir/$public/$category/$fbase.html"
+				[[ -d "$blogdir/$public/$category" ]] || mkdir -p "$blogdir/$public/$category"
+			fi
+
+			render_html "$template" "$p" "$post_list" "$category" > "$output" && _verbose -e "|   ✍ $fbase"
+		done
+
+		$post_list || continue
+
+		[[ "$max_postlist" != "unlimited" ]] &&
+			export list_$category='<ul class="postlist">'"$(head -n $max_postlist $temp/postlist)"'</ul>' &&
+			export archive_$category='<ul class="postlist">'"$(cat $temp/postlist 2>/dev/null)"'</ul>' ||
+			export list_$category='<ul class="postlist">'"$(cat $temp/postlist 2>/dev/null)"'</ul>'
+		rm "$temp/postlist"
+
+	done < "$blogdir/_site"
+}
+
 load_metadata() {
 	local file=$1\
 		  isapost=${2:-false}\
+		  category=$3\
 	      meta=$(sed -ne '/^---$/,/^---$/ { /---/!p }' $file)\
 	      fbase=$(basename "$file" | sed -e 's/\s/-/g' -e 's/"//g' | awk '{print tolower($0)}')\
 		  aux
@@ -95,17 +110,18 @@ load_metadata() {
 	local udate=$(date -d "`stat -c %y "$file"`" +"%s")
 	export date=$(date -d "@$udate" +"$date_fmt")
 
-	$enable_rss && $isapost &&
-		echo -e "<item>\n<title>$title</title>\n<author>$author</author>\n<guid>$blog_url/posts/${fbase%.md}.html</guid>\n<pubDate>$(date -d "@$udate" +"%a, %d %b %Y %H:%M:%S %z")</pubDate><description><![CDATA[\c" >> $temp/rss
+	$enable_rss && $isapost && [[ ! -z "$category" ]] &&
+		echo -e "<item>\n<category>$category</category><title>$title</title>\n<author>$author</author>\n<guid>$blog_url/posts/${fbase%.md}.html</guid>\n<pubDate>$(date -d "@$udate" +"%a, %d %b %Y %H:%M:%S %z")</pubDate><description><![CDATA[\c" >> $temp/rss
 
-	$isapost && postlist_add "${fbase%.md}" "$title" "$author" "$date"
+	$isapost && postlist_add "${fbase%.md}" "$title" "$author" "$date" "$category"
 }
 
 postlist_add() {
 	export fname=$1.html\
 		   title=$2\
 		   author=$3\
-		   date=$4
+		   date=$4\
+		   category=$5
 	echo "<li>$(envsubst <<< $postlist_fmt)</li>" >> $temp/postlist
 }
 
@@ -137,36 +153,24 @@ cleanf() {
 render_html() {
 	local template="$blogdir/$templ/$1.html"\
 		  file=$2\
-		  isapost=${3:-false}
+		  isapost=${3:-false}\
+		  category=$4
 
 	[[ -f $file ]] || return
 	[[ -f "$template" ]] ||
 		echo -e '<!DOCTYPE html>\n<html>\n<head>\n\t<meta charset="utf-8">\n\t<title>$blog_title</title>\n\t<meta name="description" content="$blog_desc">\n\t<link rel="alternate" type="application/rss+xml" title="RSS Feed for $blog_title" href="rss.xml"/>\n\t<link rel="stylesheet" href="style.css">\n</head>\n<body>\n<header>\n\t<h1><a href="./index.html"/>$blog_title</a></h1>\n</header>\n<article>$post</article>\n<footer>\n\t<small>Powered by <a href="https://github.com/jaderebrasil/blog">blog</a></small>\n</footer>\n</body>\n</html>' > $template;
 
-
-	load_metadata $file $isapost
+	load_metadata $file $isapost $category
 
 	local src=$(sed -e '/^---$/,/^---$/ { d }' $file)
 	local html=$($markup <<< $src)
 	export post=$(envsubst <<< $html)
 
-	$enable_rss && $isapost &&
+	echo "$isapost - $file" >> log
+	$enable_rss && $isapost && [[ ! -z "$category" ]] &&
 		echo -e "${post//$'\n'/}]]></description>\n</item>\n" >> $temp/rss
 
 	envsubst < "$template"
-}
-
-render_posts() {
-	local pdir="$blogdir/$public/$posts"
-
-	for p in $(ls -t1 "$blogdir/$posts/"*.md 2>/dev/null); do
-		fbase=$(basename "$p" | sed -e 's/\s/-/g' -e 's/"//g' | awk '{print tolower($0)}')
-		render_html "post_template" "$p" true > $pdir/${fbase%.md}.html
-	done
-}
-
-render_index() {
-	render_html "index_template" "$blogdir/index.md" > $blogdir/$public/index.html
 }
 ##########################################
 main

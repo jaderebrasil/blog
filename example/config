@@ -1,4 +1,5 @@
 #!/bin/bash
+verbose=true
 blog_title="Blog of Blog"
 blog_desc="Description blog to proof the power of blog."
 blog_author="Jader Brasil"
@@ -18,7 +19,8 @@ declare -A extra_pages=( \
 # rewrite cleanf function of blog for a particular case
 cleanf() {
 	echo "Don't clean anything! except... posts, rss, index and archive"
-	find "$blogdir/$public/$posts" -name "*.html" -type f -exec rm -f {} +
+	find "$blogdir/$public/posts" -name "*.html" -type f -exec rm -f {} +
+	find "$blogdir/$public/category" -name "*.html" -type f -exec rm -f {} +
 	rm -f $blogdir/$public/rss.xml
 	rm -f $blogdir/$public/index.html
 	rm -f $blogdir/$public/archive.html

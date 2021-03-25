@@ -8,5 +8,4 @@ See [example](./example/index.md) for source or [blog](https://jaderebrasil.gith
 
 TODO
 ====
-+ Unify extra_pages with the pages already created. Providing more freedom in the blog structure.
 + Parse tags in metadata.
