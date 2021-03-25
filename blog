@@ -150,6 +150,17 @@ cleanf() {
 	rm -f $blogdir/$public/rss.xml
 }
 
+include_parser() {
+	local html=$(cat "$1")
+	for file in $(sed -ne 's/^\s*\$include\s*<\([^>]*\)>\s*/\1/p' "$1"); do
+		html=$(sed -e '/^\s*\$include\s*<'"$file"'>\s*/{
+			r '"$blogdir/$templ/$file"'
+			d
+		}' <<< "$html")
+	done
+	echo "$html"
+}
+
 render_html() {
 	local template="$blogdir/$templ/$1.html"\
 		  file=$2\
@@ -166,11 +177,10 @@ render_html() {
 	local html=$($markup <<< $src)
 	export post=$(envsubst <<< $html)
 
-	echo "$isapost - $file" >> log
 	$enable_rss && $isapost && [[ ! -z "$category" ]] &&
 		echo -e "${post//$'\n'/}]]></description>\n</item>\n" >> $temp/rss
 
-	envsubst < "$template"
+	envsubst <<< $(include_parser "$template")
 }
 ##########################################
 main
