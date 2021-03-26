@@ -3,7 +3,7 @@ title: Museum
 ---
 
 # All posts
-$archive_posts
+$posts_archive
 
 # All category examples
-$archive_category
+$category_archive

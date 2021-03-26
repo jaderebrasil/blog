@@ -1,0 +1,10 @@
+#!/bin/sh
+# SC2016 - not expand on single quotes
+# SC1090 - can't follow config file
+# SC2039 - in POSIX sh, 'local' is undefined
+
+shellcheck \
+	-e "SC2016"\
+	-e "SC1090"\
+	-e "SC2039"\
+	blog

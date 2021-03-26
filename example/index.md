@@ -48,7 +48,6 @@ The standared directories are
 
 	blogdir=$(pwd)
 	templ="templ"
-	posts="posts"
 	public="public"
 
 ### Templates
@@ -67,7 +66,7 @@ Usage
 Just run `blog` in your source directory.
 
 This directory, &#36;blogdir, must contain the `config` file, and the Directories
-&#36;templ, &#36;posts and &#36;public.
+&#36;templ and &#36;public.
 
 The index.md file also must be in &#36;blogdir.
 

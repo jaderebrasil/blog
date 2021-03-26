@@ -3,4 +3,4 @@ title: First Org Post!
 ---
 
 * $title
-Without a doubt [[https://github.com/jaderebrasil/blog][blog]] is versatile, simple and can serve many purposes.
+No doubt that [[https://github.com/jaderebrasil/blog][blog]] is versatile, simple and can serve many purposes.

@@ -5,10 +5,26 @@
 <link>https://jaderebrasil.github.io/blog/</link>
 <description>Description blog to proof the power of blog.</description>
 <item>
-<category>posts</category><title>First Org Post!</title>
+<category>posts</category>
+<title>First Org Post!</title>
 <author>Jader Brasil</author>
 <guid>https://jaderebrasil.github.io/blog/posts/first_post.html</guid>
-<pubDate>qui, 25 mar 2021 01:36:48 -0300</pubDate><description><![CDATA[<div id="table-of-contents"><h2>Table of Contents</h2><div id="text-table-of-contents"><ul><li><a href="#org4d8d553">1. First Org Post!</a></li></ul></div></div><div id="outline-container-org4d8d553" class="outline-2"><h2 id="org4d8d553"><span class="section-number-2">1</span> First Org Post!</h2><div class="outline-text-2" id="text-1"><p>Without a doubt <a href="https://github.com/jaderebrasil/blog">blog</a> is versatile, simple and can serve many purposes.</p></div></div>]]></description>
+<pubDate>sex, 26 mar 2021 19:18:54 -0300</pubDate>
+<description><![CDATA[\c<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org949649a">1. First Org Post!</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org949649a" class="outline-2">
+<h2 id="org949649a"><span class="section-number-2">1</span> First Org Post!</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+No doubt that <a href="https://github.com/jaderebrasil/blog">blog</a> is versatile, simple and can serve many purposes.</p>
+</div>
+</div>]]></description>
 </item>
 </channel>
 </rss>

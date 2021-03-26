@@ -6,7 +6,7 @@ blog_author="Jader Brasil"
 blog_url="https://jaderebrasil.github.io/blog/"
 max_postlist=4
 ex="org"
-markup="./org"
+markup="./org.el"
 
 
 export github="https://github.com/jaderebrasil/blog"
